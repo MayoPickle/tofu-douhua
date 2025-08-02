@@ -1,4 +1,4 @@
-# 豆腐花语音聊天 - Discord Clone
+# 豆花语音聊天 - Discord Clone
 
 一个类似 Discord 的 WebRTC 语音聊天应用，支持邮箱注册、频道管理、语音通话和实时聊天。
 
