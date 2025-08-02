@@ -1,30 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Input, Button, Avatar, Typography, Space, Badge } from 'antd';
-import { SendOutlined, AudioOutlined, AudioMutedOutlined, PlusOutlined } from '@ant-design/icons';
+import { Input, Avatar, Typography } from 'antd';
+import { SendOutlined } from '@ant-design/icons';
 import { Channel, Message, User } from '../types';
 import { channelAPI } from '../services/api';
 import socketService from '../services/socket';
-import { useWebRTC } from '../hooks/useWebRTC';
+
 
 const { Title, Text } = Typography;
 
 interface ChatAreaProps {
   channel: Channel | null;
   user: User;
-  autoJoinVoice?: number | null;
-  onVoiceJoined?: () => void;
 }
 
-const ChatArea: React.FC<ChatAreaProps> = ({ channel, user, autoJoinVoice, onVoiceJoined }) => {
+const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { connectedUsers, isAudioEnabled, startAudio, stopAudio, initiateCall } = useWebRTC(
-    channel?.id || null,
-    user.id
-  );
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,23 +43,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user, autoJoinVoice, onVoi
     setInputValue('');
   };
 
-  const handleToggleAudio = async () => {
-    try {
-      if (isAudioEnabled) {
-        stopAudio();
-      } else {
-        await startAudio();
-        // 自动与频道中的其他用户建立连接
-        connectedUsers.forEach(connectedUser => {
-          if (connectedUser.userId !== user.id) {
-            initiateCall(connectedUser.id);
-          }
-        });
-      }
-    } catch (error) {
-      console.error('音频切换失败:', error);
-    }
-  };
+
 
   useEffect(() => {
     if (channel) {
@@ -87,14 +66,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user, autoJoinVoice, onVoi
     scrollToBottom();
   }, [messages]);
 
-  // 处理自动加入语音
-  useEffect(() => {
-    if (autoJoinVoice && channel && autoJoinVoice === channel.id && !isAudioEnabled) {
-      handleToggleAudio().then(() => {
-        onVoiceJoined?.();
-      }).catch(console.error);
-    }
-  }, [autoJoinVoice, channel, isAudioEnabled]);
+
 
   if (!channel) {
     return (
@@ -148,24 +120,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user, autoJoinVoice, onVoi
             </>
           )}
         </div>
-        
-        {/* 语音控制 */}
-        <Space size={8}>
-          <Badge count={connectedUsers.length} showZero color="#5865f2">
-            <Button
-              type={isAudioEnabled ? "primary" : "default"}
-              icon={isAudioEnabled ? <AudioOutlined /> : <AudioMutedOutlined />}
-              onClick={handleToggleAudio}
-              style={{
-                backgroundColor: isAudioEnabled ? '#5865f2' : '#4f545c',
-                borderColor: isAudioEnabled ? '#5865f2' : '#4f545c',
-                color: '#ffffff'
-              }}
-            >
-              {isAudioEnabled ? '离开语音' : '加入语音'}
-            </Button>
-          </Badge>
-        </Space>
       </div>
 
 

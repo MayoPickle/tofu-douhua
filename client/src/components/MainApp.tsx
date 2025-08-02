@@ -21,7 +21,7 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
     username: string;
     channelId: number;
   }>>([]);
-  const [autoJoinVoice, setAutoJoinVoice] = useState<number | null>(null);
+
 
   // 语音控制状态
   const [isInVoiceChannel, setIsInVoiceChannel] = useState(false);
@@ -67,8 +67,7 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
       setCurrentVoiceChannelId(channelId);
       setCurrentVoiceChannelName(channelName);
 
-      // 触发ChatArea中的语音连接
-      setAutoJoinVoice(channelId);
+
 
     } catch (error) {
       console.error('加入语音频道失败:', error);
@@ -89,8 +88,7 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
     // 从连接用户列表中移除当前用户
     setConnectedUsers(prev => prev.filter(u => u.userId !== user.id));
 
-    // 清除自动加入语音状态
-    setAutoJoinVoice(null);
+
   };
 
   // 切换静音状态
@@ -200,11 +198,9 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        <ChatArea 
+        <ChatArea
           channel={selectedChannel}
           user={user}
-          autoJoinVoice={autoJoinVoice}
-          onVoiceJoined={() => setAutoJoinVoice(null)}
         />
       </div>
     </div>
