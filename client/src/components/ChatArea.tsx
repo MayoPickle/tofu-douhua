@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Input, Avatar, Typography } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { Channel, Message, User } from '../types';
@@ -49,14 +49,30 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     if (!inputValue.trim() || !channel) return;
     
     socketService.sendMessage(channel.id, inputValue.trim());
     setInputValue('');
+  }, [ inputValue, channel]);
+
+  const handleToggleAudio = async () => {
+    try {
+      if (isAudioEnabled) {
+        stopAudio();
+      } else {
+        await startAudio();
+        // 自动与频道中的其他用户建立连接
+        connectedUsers.forEach(connectedUser => {
+          if (connectedUser.userId !== user.id) {
+            initiateCall(connectedUser.id);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('音频切换失败:', error);
+    }
   };
-
-
 
   useEffect(() => {
     if (channel) {
@@ -98,6 +114,51 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
     );
   }
 
+  const MessageInput = React.memo(({channel, inputValue, setInputValue, handleSendMessage}) => {
+    return (
+      <Input
+        placeholder={`给 #${channel.name} 发送消息`}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onPressEnter={handleSendMessage}
+        onFocus={(e) => {
+          e.target.parentElement.style.borderColor = '#5865f2';
+        } }
+        onBlur={(e) => {
+          e.target.parentElement.style.borderColor = 'transparent';
+        } }
+        style={{
+          backgroundColor: 'transparent',
+          border: 'none',
+          color: '#dcddde',
+          fontSize: 16,
+          padding: '11px 16px',
+          flex: 1,
+          outline: 'none',
+          boxShadow: 'none'
+        }}
+        className="discord-input"
+        suffix={inputValue.trim() ? (
+          <SendOutlined
+            onClick={handleSendMessage}
+            style={{
+              color: '#5865f2',
+              fontSize: 18,
+              cursor: 'pointer',
+              padding: 4,
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#4752c4';
+            } }
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#5865f2';
+            } } />
+        ) : null} 
+      />
+    );
+
+  })
   return (
     <div style={{ 
       flex: 1, 
@@ -235,48 +296,11 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
           border: '1px solid transparent',
           transition: 'border-color 0.2s ease'
         }}>
-          <Input
-            placeholder={`给 #${channel.name} 发送消息`}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onPressEnter={handleSendMessage}
-            onFocus={(e) => {
-              e.target.parentElement.style.borderColor = '#5865f2';
-            }}
-            onBlur={(e) => {
-              e.target.parentElement.style.borderColor = 'transparent';
-            }}
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: '#dcddde',
-              fontSize: 16,
-              padding: '11px 16px',
-              flex: 1,
-              outline: 'none',
-              boxShadow: 'none'
-            }}
-            className="discord-input"
-            suffix={
-              inputValue.trim() ? (
-                <SendOutlined
-                  onClick={handleSendMessage}
-                  style={{
-                    color: '#5865f2',
-                    fontSize: 18,
-                    cursor: 'pointer',
-                    padding: 4,
-                    transition: 'color 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#4752c4';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#5865f2';
-                  }}
-                />
-              ) : null
-            }
+          <MessageInput
+            channel={channel}
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+            handleSendMessage={handleSendMessage}
           />
         </div>
         
