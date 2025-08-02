@@ -1,66 +1,175 @@
+/* Discord主题颜色变量 */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  /* Discord品牌色 */
+  --discord-blurple: #5865f2;
+  --discord-blurple-dark: #4752c4;
+  
+  /* 背景色 */
+  --discord-dark: #202225;
+  --discord-darker: #1e2124;
+  --discord-grey: #2f3136;
+  --discord-grey-light: #36393f;
+  --discord-grey-lighter: #40444b;
+  
+  /* 文字色 */
+  --discord-white: #ffffff;
+  --discord-text-light: #dcddde;
+  --discord-text-muted: #b9bbbe;
+  --discord-text-dark: #8e9297;
+  --discord-text-darker: #72767d;
+  --discord-text-darkest: #4f545c;
+  
+  /* 状态色 */
+  --discord-online: #3ba55d;
+  --discord-idle: #faa81a;
+  --discord-dnd: #ed4245;
+  --discord-offline: #747f8d;
+  
+  /* 系统设置 */
+  font-family: "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1.375;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  min-width: 320px;
+  padding: 0;
+  background-color: var(--discord-grey-light);
+  color: var(--discord-text-light);
   min-height: 100vh;
+  overflow: hidden;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+::-webkit-scrollbar-track {
+  background: var(--discord-grey);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+::-webkit-scrollbar-thumb {
+  background-color: var(--discord-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--discord-text-darkest);
+}
+
+/* Ant Design组件样式重写 */
+.ant-tabs .ant-tabs-tab {
+  color: var(--discord-text-muted) !important;
+}
+
+.ant-tabs .ant-tabs-tab.ant-tabs-tab-active {
+  color: var(--discord-white) !important;
+}
+
+.ant-tabs .ant-tabs-tab:hover {
+  color: var(--discord-text-light) !important;
+}
+
+.ant-tabs .ant-tabs-ink-bar {
+  background: var(--discord-blurple) !important;
+}
+
+.ant-input::placeholder {
+  color: var(--discord-text-dark) !important;
+}
+
+.ant-modal .ant-modal-content {
+  background-color: var(--discord-grey-light) !important;
+}
+
+.ant-modal .ant-modal-header {
+  background-color: var(--discord-grey-light) !important;
+  border-bottom: 1px solid var(--discord-grey) !important;
+}
+
+.ant-form-item-label > label {
+  color: var(--discord-text-muted) !important;
+}
+
+/* 消息气泡动画 */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  a:hover {
-    color: #747bff;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  button {
-    background-color: #f9f9f9;
-  }
+}
+
+.message-item {
+  animation: messageSlideIn 0.2s ease-out;
+}
+
+/* 用户状态指示器 */
+.user-status {
+  position: relative;
+}
+
+.user-status::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--discord-grey);
+  background-color: var(--discord-online);
+}
+
+/* 按钮悬停效果 */
+.discord-button {
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.discord-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 服务器图标悬停效果 */
+.server-icon {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.server-icon::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 8px;
+  background-color: var(--discord-white);
+  border-radius: 0 4px 4px 0;
+  transition: all 0.2s ease;
+}
+
+.server-icon:hover::before {
+  width: 4px;
+  height: 20px;
+}
+
+.server-icon.active::before {
+  width: 4px;
+  height: 40px;
 }

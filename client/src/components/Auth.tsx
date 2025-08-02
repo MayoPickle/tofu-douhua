@@ -47,23 +47,58 @@ const Auth: React.FC<AuthProps> = ({ onAuth }) => {
     <Form name="login" onFinish={handleLogin} layout="vertical">
       <Form.Item
         name="email"
-        label="邮箱"
+        label={<span style={{ color: '#b9bbbe', fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>邮箱 *</span>}
         rules={[
           { required: true, message: '请输入邮箱!' },
           { type: 'email', message: '请输入有效的邮箱地址!' }
         ]}
       >
-        <Input prefix={<MailOutlined />} placeholder="邮箱" />
+        <Input 
+          prefix={<MailOutlined style={{ color: '#72767d' }} />} 
+          placeholder="邮箱"
+          style={{
+            backgroundColor: '#202225',
+            border: 'none',
+            borderRadius: 3,
+            color: '#ffffff',
+            fontSize: 16,
+            padding: '10px 12px'
+          }}
+        />
       </Form.Item>
       <Form.Item
         name="password"
-        label="密码"
+        label={<span style={{ color: '#b9bbbe', fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>密码 *</span>}
         rules={[{ required: true, message: '请输入密码!' }]}
       >
-        <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+        <Input.Password 
+          prefix={<LockOutlined style={{ color: '#72767d' }} />} 
+          placeholder="密码"
+          style={{
+            backgroundColor: '#202225',
+            border: 'none',
+            borderRadius: 3,
+            color: '#ffffff',
+            fontSize: 16,
+            padding: '10px 12px'
+          }}
+        />
       </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit" loading={loading} block>
+      <Form.Item style={{ marginTop: 20 }}>
+        <Button 
+          type="primary" 
+          htmlType="submit" 
+          loading={loading} 
+          block
+          style={{
+            backgroundColor: '#5865f2',
+            borderColor: '#5865f2',
+            borderRadius: 3,
+            height: 44,
+            fontSize: 16,
+            fontWeight: 500
+          }}
+        >
           登录
         </Button>
       </Form.Item>
@@ -74,33 +109,79 @@ const Auth: React.FC<AuthProps> = ({ onAuth }) => {
     <Form name="register" onFinish={handleRegister} layout="vertical">
       <Form.Item
         name="username"
-        label="用户名"
+        label={<span style={{ color: '#b9bbbe', fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>用户名 *</span>}
         rules={[{ required: true, message: '请输入用户名!' }]}
       >
-        <Input prefix={<UserOutlined />} placeholder="用户名" />
+        <Input 
+          prefix={<UserOutlined style={{ color: '#72767d' }} />} 
+          placeholder="用户名"
+          style={{
+            backgroundColor: '#202225',
+            border: 'none',
+            borderRadius: 3,
+            color: '#ffffff',
+            fontSize: 16,
+            padding: '10px 12px'
+          }}
+        />
       </Form.Item>
       <Form.Item
         name="email"
-        label="邮箱"
+        label={<span style={{ color: '#b9bbbe', fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>邮箱 *</span>}
         rules={[
           { required: true, message: '请输入邮箱!' },
           { type: 'email', message: '请输入有效的邮箱地址!' }
         ]}
       >
-        <Input prefix={<MailOutlined />} placeholder="邮箱" />
+        <Input 
+          prefix={<MailOutlined style={{ color: '#72767d' }} />} 
+          placeholder="邮箱"
+          style={{
+            backgroundColor: '#202225',
+            border: 'none',
+            borderRadius: 3,
+            color: '#ffffff',
+            fontSize: 16,
+            padding: '10px 12px'
+          }}
+        />
       </Form.Item>
       <Form.Item
         name="password"
-        label="密码"
+        label={<span style={{ color: '#b9bbbe', fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>密码 *</span>}
         rules={[
           { required: true, message: '请输入密码!' },
           { min: 6, message: '密码至少6位!' }
         ]}
       >
-        <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+        <Input.Password 
+          prefix={<LockOutlined style={{ color: '#72767d' }} />} 
+          placeholder="密码"
+          style={{
+            backgroundColor: '#202225',
+            border: 'none',
+            borderRadius: 3,
+            color: '#ffffff',
+            fontSize: 16,
+            padding: '10px 12px'
+          }}
+        />
       </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit" loading={loading} block>
+      <Form.Item style={{ marginTop: 20 }}>
+        <Button 
+          type="primary" 
+          htmlType="submit" 
+          loading={loading} 
+          block
+          style={{
+            backgroundColor: '#5865f2',
+            borderColor: '#5865f2',
+            borderRadius: 3,
+            height: 44,
+            fontSize: 16,
+            fontWeight: 500
+          }}
+        >
           注册
         </Button>
       </Form.Item>
@@ -113,12 +194,35 @@ const Auth: React.FC<AuthProps> = ({ onAuth }) => {
       justifyContent: 'center', 
       alignItems: 'center', 
       minHeight: '100vh',
-      background: '#f0f2f5'
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: 20
     }}>
-      <Card style={{ width: 400 }}>
-        <Title level={2} style={{ textAlign: 'center', marginBottom: 24 }}>
-          豆腐花语音聊天
-        </Title>
+      <div style={{
+        width: 400,
+        backgroundColor: '#36393f',
+        borderRadius: 8,
+        padding: 32,
+        boxShadow: '0 8px 16px rgba(0,0,0,0.24)'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <Title level={2} style={{ 
+            color: '#ffffff', 
+            marginBottom: 8,
+            fontSize: 24,
+            fontWeight: 600
+          }}>
+            欢迎来到豆腐花
+          </Title>
+          <Title level={4} style={{ 
+            color: '#b9bbbe', 
+            margin: 0,
+            fontSize: 16,
+            fontWeight: 400
+          }}>
+            很高兴你再次回来！
+          </Title>
+        </div>
+
         <Tabs
           defaultActiveKey="login"
           items={[
@@ -133,8 +237,15 @@ const Auth: React.FC<AuthProps> = ({ onAuth }) => {
               children: registerForm,
             },
           ]}
+          style={{
+            color: '#ffffff'
+          }}
+          tabBarStyle={{
+            borderBottom: '1px solid #4f545c',
+            marginBottom: 24
+          }}
         />
-      </Card>
+      </div>
     </div>
   );
 };
