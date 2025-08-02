@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Avatar, Button, Dropdown, Space, Typography } from 'antd';
-import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import { Typography } from 'antd';
+
 import ChannelList from './ChannelList';
 import ChatArea from './ChatArea';
 import { Channel, User } from '../types';
 import socketService from '../services/socket';
 
-const { Header, Content } = Layout;
 const { Text } = Typography;
 
 interface MainAppProps {
@@ -24,6 +23,13 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
   }>>([]);
   const [autoJoinVoice, setAutoJoinVoice] = useState<number | null>(null);
 
+  // 语音控制状态
+  const [isInVoiceChannel, setIsInVoiceChannel] = useState(false);
+  const [currentVoiceChannelId, setCurrentVoiceChannelId] = useState<number | null>(null);
+  const [currentVoiceChannelName, setCurrentVoiceChannelName] = useState<string>('');
+  const [isMuted, setIsMuted] = useState(false);
+  const [isDeafened, setIsDeafened] = useState(false);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -37,10 +43,10 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
     }
   };
 
-  const handleJoinVoice = async (channelId: number) => {
+  const handleJoinVoice = async (channelId: number, channelName: string) => {
     try {
       console.log(`加入语音频道: ${channelId}`);
-      
+
       // 将当前用户添加到连接列表中
       const currentUserConnection = {
         id: `current-user-${user.id}`,
@@ -48,76 +54,68 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
         username: user.username,
         channelId: channelId
       };
-      
+
       setConnectedUsers(prev => {
         // 先移除用户在其他频道的连接
         const filteredUsers = prev.filter(u => u.userId !== user.id);
         // 添加到新频道
         return [...filteredUsers, currentUserConnection];
       });
-      
+
+      // 设置语音频道状态
+      setIsInVoiceChannel(true);
+      setCurrentVoiceChannelId(channelId);
+      setCurrentVoiceChannelName(channelName);
+
       // 触发ChatArea中的语音连接
       setAutoJoinVoice(channelId);
-      
+
     } catch (error) {
       console.error('加入语音频道失败:', error);
     }
   };
 
-  const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: '个人资料',
-    },
-    {
-      type: 'divider' as const,
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: '退出登录',
-      onClick: handleLogout,
-    },
-  ];
+  // 退出语音频道
+  const handleLeaveVoice = () => {
+    console.log('退出语音频道');
+
+    // 清除语音状态
+    setIsInVoiceChannel(false);
+    setCurrentVoiceChannelId(null);
+    setCurrentVoiceChannelName('');
+    setIsMuted(false);
+    setIsDeafened(false);
+
+    // 从连接用户列表中移除当前用户
+    setConnectedUsers(prev => prev.filter(u => u.userId !== user.id));
+
+    // 清除自动加入语音状态
+    setAutoJoinVoice(null);
+  };
+
+  // 切换静音状态
+  const handleToggleMute = () => {
+    setIsMuted(prev => !prev);
+    console.log('切换静音状态:', !isMuted);
+  };
+
+  // 切换禁听状态
+  const handleToggleDeafen = () => {
+    const newDeafenState = !isDeafened;
+    setIsDeafened(newDeafenState);
+    // 如果启用禁听，同时启用静音
+    if (newDeafenState) {
+      setIsMuted(true);
+    }
+    console.log('切换禁听状态:', newDeafenState);
+  };
+
+
 
   useEffect(() => {
     socketService.connect(user);
     
-    // 监听用户连接事件
-    const handleUserConnected = (data: { id: string; userId: number; username: string; channelId: number }) => {
-      setConnectedUsers(prev => {
-        const exists = prev.find(u => u.id === data.id);
-        if (!exists) {
-          return [...prev, data];
-        }
-        return prev;
-      });
-    };
 
-    // 监听用户断开连接事件
-    const handleUserDisconnected = (data: { id: string }) => {
-      setConnectedUsers(prev => prev.filter(u => u.id !== data.id));
-    };
-
-    // 监听频道用户列表更新
-    const handleChannelUsersUpdate = (data: { channelId: number; users: Array<{ id: string; userId: number; username: string }> }) => {
-      setConnectedUsers(prev => {
-        // 移除该频道的旧用户
-        const filteredUsers = prev.filter(u => u.channelId !== data.channelId);
-        // 添加新的用户列表
-        const newUsers = data.users.map(user => ({
-          ...user,
-          channelId: data.channelId
-        }));
-        return [...filteredUsers, ...newUsers];
-      });
-    };
-
-    // 注册事件监听器（这些事件需要在后端实现）
-    // socketService.on('userConnected', handleUserConnected);
-    // socketService.on('userDisconnected', handleUserDisconnected);
-    // socketService.on('channelUsersUpdate', handleChannelUsersUpdate);
     
     return () => {
       socketService.disconnect();
@@ -179,13 +177,21 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
       </div>
 
       {/* 频道列表 */}
-      <ChannelList 
+      <ChannelList
         onChannelSelect={handleChannelSelect}
         selectedChannelId={selectedChannel?.id || null}
         user={user}
         onLogout={handleLogout}
         onJoinVoice={handleJoinVoice}
         connectedUsers={connectedUsers}
+        isInVoiceChannel={isInVoiceChannel}
+        currentVoiceChannelId={currentVoiceChannelId}
+        currentVoiceChannelName={currentVoiceChannelName}
+        onLeaveVoice={handleLeaveVoice}
+        isMuted={isMuted}
+        isDeafened={isDeafened}
+        onToggleMute={handleToggleMute}
+        onToggleDeafen={handleToggleDeafen}
       />
 
       {/* 主内容区域 */}

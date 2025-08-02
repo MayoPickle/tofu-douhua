@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Input, message, Typography, Avatar, Dropdown } from 'antd';
-import { PlusOutlined, SoundOutlined, HashOutlined, LogoutOutlined, UserOutlined, SettingOutlined } from '@ant-design/icons';
+import { PlusOutlined, SoundOutlined, LogoutOutlined, UserOutlined, SettingOutlined, AudioOutlined, AudioMutedOutlined, PhoneOutlined, SoundFilled } from '@ant-design/icons';
 import { Channel } from '../types';
 import { channelAPI } from '../services/api';
 
@@ -15,16 +15,40 @@ interface ChannelListProps {
     email: string;
   };
   onLogout?: () => void;
-  onJoinVoice?: (channelId: number) => void;
+  onJoinVoice?: (channelId: number, channelName: string) => void;
   connectedUsers?: Array<{
     id: string;
     userId: number;
     username: string;
     channelId: number;
   }>;
+  // 语音控制相关
+  isInVoiceChannel?: boolean;
+  currentVoiceChannelId?: number | null;
+  currentVoiceChannelName?: string;
+  onLeaveVoice?: () => void;
+  isMuted?: boolean;
+  isDeafened?: boolean;
+  onToggleMute?: () => void;
+  onToggleDeafen?: () => void;
 }
 
-const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChannelId, user, onLogout, onJoinVoice, connectedUsers }) => {
+const ChannelList: React.FC<ChannelListProps> = ({
+  onChannelSelect,
+  selectedChannelId,
+  user,
+  onLogout,
+  onJoinVoice,
+  connectedUsers,
+  isInVoiceChannel,
+
+  currentVoiceChannelName,
+  onLeaveVoice,
+  isMuted,
+  isDeafened,
+  onToggleMute,
+  onToggleDeafen
+}) => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,14 +84,14 @@ const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChan
       onChannelSelect(channel);
       // 自动加入语音频道
       if (onJoinVoice) {
-        onJoinVoice(channel.id);
+        onJoinVoice(channel.id, channel.name);
       }
     } catch (error: any) {
       if (error.response?.status === 400) {
         onChannelSelect(channel);
         // 即使已经在频道中，也尝试加入语音
         if (onJoinVoice) {
-          onJoinVoice(channel.id);
+          onJoinVoice(channel.id, channel.name);
         }
       } else {
         message.error('加入频道失败');
@@ -283,6 +307,142 @@ const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChan
           </div>
         )}
       </div>
+
+      {/* 语音控制面板 */}
+      {isInVoiceChannel && currentVoiceChannelName && (
+        <div style={{
+          backgroundColor: '#292b2f',
+          padding: '8px',
+          borderTop: '1px solid #202225',
+          borderBottom: '1px solid #202225'
+        }}>
+          {/* 当前语音频道信息 */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: 8,
+            padding: '4px 8px',
+            backgroundColor: '#36393f',
+            borderRadius: 4
+          }}>
+            <SoundFilled style={{
+              color: '#3ba55d',
+              fontSize: 14,
+              marginRight: 8
+            }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text style={{
+                color: '#3ba55d',
+                fontSize: 12,
+                fontWeight: 600,
+                display: 'block',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                语音已连接
+              </Text>
+              <Text style={{
+                color: '#ffffff',
+                fontSize: 14,
+                fontWeight: 500,
+                display: 'block',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {currentVoiceChannelName}
+              </Text>
+            </div>
+          </div>
+
+          {/* 语音控制按钮 */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 4
+          }}>
+            {/* 静音按钮 */}
+            <Button
+              type="text"
+              icon={isMuted ? <AudioMutedOutlined /> : <AudioOutlined />}
+              onClick={onToggleMute}
+              style={{
+                flex: 1,
+                height: 32,
+                backgroundColor: isMuted ? '#ed4245' : '#4f545c',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 16
+              }}
+              onMouseEnter={(e) => {
+                if (!isMuted) {
+                  e.currentTarget.style.backgroundColor = '#5d6269';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isMuted ? '#ed4245' : '#4f545c';
+              }}
+            />
+
+            {/* 禁听按钮 */}
+            <Button
+              type="text"
+              icon={<SoundOutlined style={{ transform: isDeafened ? 'none' : 'scaleX(-1)' }} />}
+              onClick={onToggleDeafen}
+              style={{
+                flex: 1,
+                height: 32,
+                backgroundColor: isDeafened ? '#ed4245' : '#4f545c',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 16
+              }}
+              onMouseEnter={(e) => {
+                if (!isDeafened) {
+                  e.currentTarget.style.backgroundColor = '#5d6269';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDeafened ? '#ed4245' : '#4f545c';
+              }}
+            />
+
+            {/* 退出语音频道按钮 */}
+            <Button
+              type="text"
+              icon={<PhoneOutlined style={{ transform: 'rotate(135deg)' }} />}
+              onClick={onLeaveVoice}
+              style={{
+                flex: 1,
+                height: 32,
+                backgroundColor: '#ed4245',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 16
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#c73e41';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#ed4245';
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* 用户信息区域 */}
       {user && (
