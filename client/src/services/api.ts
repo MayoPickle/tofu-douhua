@@ -49,4 +49,19 @@ export const channelAPI = {
     api.get(`/api/channels/${channelId}/messages`).then(res => res.data),
 };
 
+export const userAPI = {
+  updateProfile: (userData: Partial<User>): Promise<User> =>
+    api.put('/api/user/profile', userData).then(res => res.data),
+
+  uploadAvatar: (file: File): Promise<{ avatarUrl: string }> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return api.post('/api/user/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
+  },
+};
+
 export default api;

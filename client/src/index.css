@@ -173,3 +173,97 @@ body {
   width: 4px;
   height: 40px;
 }
+
+/* Discord风格的下拉菜单 */
+.discord-dropdown .ant-dropdown-menu {
+  background-color: #18191c !important;
+  border: 1px solid #292b2f !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.24) !important;
+  padding: 6px 0 !important;
+  min-width: 188px !important;
+}
+
+.discord-dropdown .ant-dropdown-menu-item {
+  color: #b9bbbe !important;
+  padding: 6px 12px !important;
+  margin: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  line-height: 18px !important;
+  transition: all 0.1s ease !important;
+}
+
+.discord-dropdown .ant-dropdown-menu-item:hover {
+  background-color: #5865f2 !important;
+  color: #ffffff !important;
+}
+
+.discord-dropdown .ant-dropdown-menu-item .ant-dropdown-menu-item-icon {
+  color: inherit !important;
+  margin-right: 8px !important;
+  font-size: 16px !important;
+}
+
+.discord-dropdown .ant-dropdown-menu-item-divider {
+  background-color: #3f4147 !important;
+  margin: 4px 6px !important;
+}
+
+/* 退出登录项特殊样式 */
+.discord-dropdown .ant-dropdown-menu-item[data-menu-id*="logout"]:hover {
+  background-color: #ed4245 !important;
+  color: #ffffff !important;
+}
+
+/* 修复下拉菜单的z-index */
+.discord-dropdown {
+  z-index: 1050 !important;
+}
+
+/* 个人资料界面样式 */
+.user-profile-modal .ant-modal-content {
+  background-color: #36393f !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+.user-profile-modal .ant-form-item-label > label {
+  color: #b9bbbe !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+}
+
+.user-profile-modal .ant-input,
+.user-profile-modal .ant-input:focus,
+.user-profile-modal .ant-input:hover {
+  background-color: #202225 !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  padding: 12px !important;
+  border-radius: 4px !important;
+}
+
+.user-profile-modal .ant-input::placeholder {
+  color: #72767d !important;
+}
+
+.user-profile-modal .ant-input-show-count-suffix {
+  color: #72767d !important;
+}
+
+.user-profile-modal .ant-upload {
+  display: block !important;
+}
+
+/* 头像悬停效果 */
+.user-profile-avatar {
+  transition: all 0.2s ease;
+}
+
+.user-profile-avatar:hover {
+  transform: scale(1.02);
+}

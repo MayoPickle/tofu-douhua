@@ -3,6 +3,7 @@ import { Button, Modal, Form, Input, message, Typography, Avatar, Dropdown } fro
 import { PlusOutlined, SoundOutlined, LogoutOutlined, UserOutlined, SettingOutlined, AudioOutlined, AudioMutedOutlined, PhoneOutlined, SoundFilled } from '@ant-design/icons';
 import { Channel } from '../types';
 import { channelAPI } from '../services/api';
+import UserProfile from './UserProfile';
 
 const { Title, Text } = Typography;
 
@@ -53,6 +54,7 @@ const ChannelList: React.FC<ChannelListProps> = ({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [isProfileVisible, setIsProfileVisible] = useState(false);
 
   const fetchChannels = async () => {
     try {
@@ -497,13 +499,14 @@ const ChannelList: React.FC<ChannelListProps> = ({
             </div>
           </div>
           
-          <Dropdown 
-            menu={{ 
+          <Dropdown
+            menu={{
               items: [
                 {
                   key: 'profile',
                   icon: <UserOutlined />,
                   label: '个人资料',
+                  onClick: () => setIsProfileVisible(true),
                 },
                 {
                   key: 'settings',
@@ -520,8 +523,9 @@ const ChannelList: React.FC<ChannelListProps> = ({
                   onClick: onLogout,
                 },
               ]
-            }} 
+            }}
             placement="topRight"
+            overlayClassName="discord-dropdown"
           >
             <Button 
               type="text" 
@@ -657,6 +661,19 @@ const ChannelList: React.FC<ChannelListProps> = ({
           </Form>
         </div>
       </Modal>
+
+      {/* 个人资料模态框 */}
+      {user && (
+        <UserProfile
+          visible={isProfileVisible}
+          onClose={() => setIsProfileVisible(false)}
+          user={user}
+          onUpdateProfile={(userData) => {
+            // 这里可以添加更新用户信息的逻辑
+            console.log('更新用户信息:', userData);
+          }}
+        />
+      )}
     </div>
   );
 };
