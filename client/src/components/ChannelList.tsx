@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Input, message, Typography, Avatar, Dropdown } from 'antd';
-import { PlusOutlined, SoundOutlined, LogoutOutlined, UserOutlined, SettingOutlined, AudioOutlined, AudioMutedOutlined, PhoneOutlined, SoundFilled } from '@ant-design/icons';
+import { PlusOutlined, SoundOutlined, LogoutOutlined, UserOutlined, SettingOutlined, AudioOutlined, AudioMutedOutlined, PhoneOutlined, SoundFilled, StopOutlined } from '@ant-design/icons';
 import { Channel } from '../types';
 import { channelAPI } from '../services/api';
 import UserProfile from './UserProfile';
@@ -394,7 +394,7 @@ const ChannelList: React.FC<ChannelListProps> = ({
             {/* 禁听按钮 */}
             <Button
               type="text"
-              icon={<SoundOutlined style={{ transform: isDeafened ? 'none' : 'scaleX(-1)' }} />}
+              icon={isDeafened ? <StopOutlined /> : <SoundOutlined />}
               onClick={onToggleDeafen}
               style={{
                 flex: 1,

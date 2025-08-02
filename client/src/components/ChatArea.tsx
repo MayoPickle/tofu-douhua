@@ -16,8 +16,21 @@ interface ChatAreaProps {
 const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 将UTC时间转换为本地时间显示
+  const formatMessageTime = (utcTimeString: string) => {
+    // 确保时间字符串以Z结尾，表示UTC时间
+    const utcTime = utcTimeString.endsWith('Z') ? utcTimeString : utcTimeString + 'Z';
+    const localDate = new Date(utcTime);
+
+    return localDate.toLocaleString('zh-CN', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
 
 
@@ -181,17 +194,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
                       }}>
                         {message.username}
                       </Text>
-                      <Text style={{ 
-                        fontSize: 12, 
+                      <Text style={{
+                        fontSize: 12,
                         color: '#a3a6aa',
                         fontWeight: 500
                       }}>
-                        {new Date(message.created_at).toLocaleString('zh-CN', {
-                          month: 'numeric',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {formatMessageTime(message.created_at)}
                       </Text>
                     </div>
                   )}
