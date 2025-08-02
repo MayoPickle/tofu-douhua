@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Form, Input, message, Typography } from 'antd';
-import { PlusOutlined, SoundOutlined, HashOutlined } from '@ant-design/icons';
+import { Button, Modal, Form, Input, message, Typography, Avatar, Dropdown } from 'antd';
+import { PlusOutlined, SoundOutlined, HashOutlined, LogoutOutlined, UserOutlined, SettingOutlined } from '@ant-design/icons';
 import { Channel } from '../types';
 import { channelAPI } from '../services/api';
 
@@ -9,9 +9,15 @@ const { Title, Text } = Typography;
 interface ChannelListProps {
   onChannelSelect: (channel: Channel) => void;
   selectedChannelId: number | null;
+  user?: {
+    id: number;
+    username: string;
+    email: string;
+  };
+  onLogout?: () => void;
 }
 
-const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChannelId }) => {
+const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChannelId, user, onLogout }) => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -195,6 +201,103 @@ const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChan
           </div>
         )}
       </div>
+
+      {/* 用户信息区域 */}
+      {user && (
+        <div style={{
+          height: 52,
+          backgroundColor: '#292b2f',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 8px',
+          borderTop: '1px solid #202225'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            flex: 1,
+            minWidth: 0
+          }}>
+            <Avatar size={32} style={{ 
+              backgroundColor: '#5865f2',
+              marginRight: 8
+            }}>
+              {user.username.charAt(0).toUpperCase()}
+            </Avatar>
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              minWidth: 0,
+              flex: 1
+            }}>
+              <Text style={{ 
+                color: '#ffffff', 
+                fontSize: 14,
+                fontWeight: 600,
+                lineHeight: 1.2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {user.username}
+              </Text>
+              <Text style={{ 
+                color: '#b9bbbe', 
+                fontSize: 12,
+                lineHeight: 1.2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                #{user.id}
+              </Text>
+            </div>
+          </div>
+          
+          <Dropdown 
+            menu={{ 
+              items: [
+                {
+                  key: 'profile',
+                  icon: <UserOutlined />,
+                  label: '个人资料',
+                },
+                {
+                  key: 'settings',
+                  icon: <SettingOutlined />,
+                  label: '设置',
+                },
+                {
+                  type: 'divider' as const,
+                },
+                {
+                  key: 'logout',
+                  icon: <LogoutOutlined />,
+                  label: '退出登录',
+                  onClick: onLogout,
+                },
+              ]
+            }} 
+            placement="topRight"
+          >
+            <Button 
+              type="text" 
+              icon={<SettingOutlined />}
+              style={{
+                color: '#b9bbbe',
+                border: 'none',
+                padding: '6px',
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            />
+          </Dropdown>
+        </div>
+      )}
 
       {/* Discord风格的创建频道模态框 */}
       <Modal

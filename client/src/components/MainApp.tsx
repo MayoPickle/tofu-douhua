@@ -113,6 +113,8 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
       <ChannelList 
         onChannelSelect={handleChannelSelect}
         selectedChannelId={selectedChannel?.id || null}
+        user={user}
+        onLogout={handleLogout}
       />
 
       {/* 主内容区域 */}
@@ -125,76 +127,6 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
           channel={selectedChannel}
           user={user}
         />
-        
-        {/* 底部用户信息栏 */}
-        <div style={{
-          height: 52,
-          backgroundColor: '#292b2f',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 8px',
-          borderTop: '1px solid #202225'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            flex: 1,
-            minWidth: 0
-          }}>
-            <Avatar size={32} style={{ 
-              backgroundColor: '#5865f2',
-              marginRight: 8
-            }}>
-              {user.username.charAt(0).toUpperCase()}
-            </Avatar>
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column',
-              minWidth: 0,
-              flex: 1
-            }}>
-              <Text style={{ 
-                color: '#ffffff', 
-                fontSize: 14,
-                fontWeight: 600,
-                lineHeight: 1.2,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}>
-                {user.username}
-              </Text>
-              <Text style={{ 
-                color: '#b9bbbe', 
-                fontSize: 12,
-                lineHeight: 1.2,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}>
-                #{user.id}
-              </Text>
-            </div>
-          </div>
-          
-          <Dropdown menu={{ items: userMenuItems }} placement="topRight">
-            <Button 
-              type="text" 
-              icon={<LogoutOutlined />}
-              style={{
-                color: '#b9bbbe',
-                border: 'none',
-                padding: '6px',
-                width: 32,
-                height: 32,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            />
-          </Dropdown>
-        </div>
       </div>
     </div>
   );
