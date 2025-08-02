@@ -29,6 +29,14 @@ class SocketService {
     }
   }
 
+  joinServer(serverId: number) {
+    this.socket?.emit('join-server', serverId);
+  }
+
+  leaveServer(serverId: number) {
+    this.socket?.emit('leave-server', serverId);
+  }
+
   joinChannel(channelId: number) {
     this.socket?.emit('join-channel', channelId);
   }

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Typography } from 'antd';
+import { Typography, message } from 'antd';
 
+import ServerList from './ServerList';
 import ChannelList from './ChannelList';
 import ChatArea from './ChatArea';
-import { Channel, User } from '../types';
+import InviteModal from './InviteModal';
+import { Channel, User, Server } from '../types';
+import { serverAPI } from '../services/api';
 import socketService from '../services/socket';
 
 const { Text } = Typography;
@@ -14,6 +17,8 @@ interface MainAppProps {
 }
 
 const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
+  // 服务器状态
+  const [selectedServer, setSelectedServer] = useState<Server | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<Array<{
     id: string;
@@ -22,6 +27,8 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
     channelId: number;
   }>>([]);
 
+  // 邀请模态框状态
+  const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
 
   // 语音控制状态
   const [isInVoiceChannel, setIsInVoiceChannel] = useState(false);
@@ -37,10 +44,34 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
     onLogout();
   };
 
+  const handleServerSelect = (server: Server) => {
+    if (selectedServer?.id !== server.id) {
+      // 离开当前服务器
+      if (selectedServer) {
+        socketService.leaveServer(selectedServer.id);
+      }
+
+      setSelectedServer(server);
+      setSelectedChannel(null); // 切换服务器时清除选中的频道
+
+      // 加入新服务器
+      socketService.joinServer(server.id);
+
+      // 如果在语音频道中，退出语音
+      if (isInVoiceChannel) {
+        handleLeaveVoice();
+      }
+    }
+  };
+
   const handleChannelSelect = (channel: Channel) => {
     if (selectedChannel?.id !== channel.id) {
       setSelectedChannel(channel);
     }
+  };
+
+  const handleShowInvite = () => {
+    setIsInviteModalVisible(true);
   };
 
   const handleJoinVoice = async (channelId: number, channelName: string) => {
@@ -110,77 +141,57 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
 
 
 
+  // 处理URL中的邀请码
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteCode = urlParams.get('invite');
+
+    if (inviteCode) {
+      // 自动尝试加入服务器
+      serverAPI.joinServer(inviteCode)
+        .then((response) => {
+          message.success(`成功加入服务器: ${response.server.name}`);
+          // 清除URL参数
+          window.history.replaceState({}, document.title, window.location.pathname);
+        })
+        .catch((error) => {
+          message.error(error.response?.data?.error || '加入服务器失败');
+          // 清除URL参数
+          window.history.replaceState({}, document.title, window.location.pathname);
+        });
+    }
+  }, []);
+
   useEffect(() => {
     socketService.connect(user);
-    
 
-    
     return () => {
       socketService.disconnect();
     };
   }, [user]);
 
   return (
-    <div style={{ 
-      height: '100vh', 
+    <div style={{
+      height: '100vh',
       display: 'flex',
       backgroundColor: '#36393f'
     }}>
-      {/* 左侧服务器栏 */}
-      <div style={{
-        width: 72,
-        backgroundColor: '#202225',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '12px 0'
-      }}>
-        {/* 服务器图标 */}
-        <div style={{
-          width: 48,
-          height: 48,
-          backgroundColor: '#5865f2',
-          borderRadius: 16,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 8,
-          cursor: 'pointer',
-          transition: 'border-radius 0.2s ease',
-          position: 'relative'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderRadius = '12px';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderRadius = '16px';
-        }}>
-          <Text style={{ 
-            color: '#ffffff', 
-            fontSize: 18, 
-            fontWeight: 600 
-          }}>
-            豆
-          </Text>
-        </div>
-        
-        {/* 分隔线 */}
-        <div style={{
-          width: 32,
-          height: 2,
-          backgroundColor: '#36393f',
-          borderRadius: 1,
-          marginBottom: 8
-        }} />
-      </div>
+      {/* 服务器列表 */}
+      <ServerList
+        user={user}
+        selectedServerId={selectedServer?.id || null}
+        onServerSelect={handleServerSelect}
+      />
 
       {/* 频道列表 */}
       <ChannelList
+        selectedServer={selectedServer}
         onChannelSelect={handleChannelSelect}
         selectedChannelId={selectedChannel?.id || null}
         user={user}
         onLogout={handleLogout}
         onJoinVoice={handleJoinVoice}
+        onShowInvite={handleShowInvite}
         connectedUsers={connectedUsers}
         isInVoiceChannel={isInVoiceChannel}
         currentVoiceChannelId={currentVoiceChannelId}
@@ -193,8 +204,8 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
       />
 
       {/* 主内容区域 */}
-      <div style={{ 
-        flex: 1, 
+      <div style={{
+        flex: 1,
         display: 'flex',
         flexDirection: 'column'
       }}>
@@ -203,6 +214,13 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
           user={user}
         />
       </div>
+
+      {/* 邀请模态框 */}
+      <InviteModal
+        visible={isInviteModalVisible}
+        onCancel={() => setIsInviteModalVisible(false)}
+        server={selectedServer}
+      />
     </div>
   );
 };

@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Form, Input, message, Typography, Avatar, Dropdown } from 'antd';
-import { PlusOutlined, SoundOutlined, LogoutOutlined, UserOutlined, SettingOutlined, AudioOutlined, AudioMutedOutlined, PhoneOutlined, SoundFilled, StopOutlined } from '@ant-design/icons';
-import { Channel } from '../types';
+import { Button, Form, message, Typography, Avatar, Dropdown } from 'antd';
+import { PlusOutlined, SoundOutlined, LogoutOutlined, UserOutlined, SettingOutlined, AudioOutlined, AudioMutedOutlined, PhoneOutlined, SoundFilled, StopOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { Channel, Server } from '../types';
 import { channelAPI } from '../services/api';
 import UserProfile from './UserProfile';
+import DiscordModal from './DiscordModal';
+import DiscordButton from './DiscordButton';
+import DiscordText from './DiscordText';
+import { DiscordInput, DiscordTextArea } from './DiscordInput';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface ChannelListProps {
+  selectedServer: Server | null;
   onChannelSelect: (channel: Channel) => void;
   selectedChannelId: number | null;
   user?: {
@@ -17,6 +22,7 @@ interface ChannelListProps {
   };
   onLogout?: () => void;
   onJoinVoice?: (channelId: number, channelName: string) => void;
+  onShowInvite?: () => void;
   connectedUsers?: Array<{
     id: string;
     userId: number;
@@ -35,14 +41,15 @@ interface ChannelListProps {
 }
 
 const ChannelList: React.FC<ChannelListProps> = ({
+  selectedServer,
   onChannelSelect,
   selectedChannelId,
   user,
   onLogout,
   onJoinVoice,
+  onShowInvite,
   connectedUsers,
   isInVoiceChannel,
-
   currentVoiceChannelName,
   onLeaveVoice,
   isMuted,
@@ -57,8 +64,13 @@ const ChannelList: React.FC<ChannelListProps> = ({
   const [isProfileVisible, setIsProfileVisible] = useState(false);
 
   const fetchChannels = async () => {
+    if (!selectedServer) {
+      setChannels([]);
+      return;
+    }
+
     try {
-      const channelList = await channelAPI.getChannels();
+      const channelList = await channelAPI.getServerChannels(selectedServer.id);
       setChannels(channelList);
     } catch (error) {
       message.error('获取频道列表失败');
@@ -66,9 +78,14 @@ const ChannelList: React.FC<ChannelListProps> = ({
   };
 
   const handleCreateChannel = async (values: { name: string; description?: string }) => {
+    if (!selectedServer) {
+      message.error('请先选择一个服务器');
+      return;
+    }
+
     setLoading(true);
     try {
-      const newChannel = await channelAPI.createChannel(values.name, values.description);
+      const newChannel = await channelAPI.createServerChannel(selectedServer.id, values.name, values.description);
       setChannels([...channels, newChannel]);
       setIsModalVisible(false);
       form.resetFields();
@@ -103,7 +120,7 @@ const ChannelList: React.FC<ChannelListProps> = ({
 
   useEffect(() => {
     fetchChannels();
-  }, []);
+  }, [selectedServer]);
 
   return (
     <div style={{ 
@@ -119,53 +136,91 @@ const ChannelList: React.FC<ChannelListProps> = ({
         borderBottom: '1px solid #202225',
         backgroundColor: '#2f3136'
       }}>
-        <Text strong style={{ 
-          color: '#ffffff', 
-          fontSize: 16,
-          display: 'block',
-          marginBottom: 8
-        }}>
-          豆腐花服务器
-        </Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <DiscordText
+            weight="semibold"
+            size="lg"
+            style={{
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {selectedServer?.name || '选择服务器'}
+          </DiscordText>
+          {selectedServer && onShowInvite && (
+            <Button
+              type="text"
+              size="small"
+              icon={<ShareAltOutlined />}
+              onClick={onShowInvite}
+              style={{
+                color: '#8e9297',
+                padding: '4px 8px',
+                height: 'auto',
+                minWidth: 'auto'
+              }}
+              title="邀请朋友"
+            />
+          )}
+        </div>
       </div>
 
       {/* 频道列表 */}
-      <div style={{ 
-        flex: 1, 
+      <div style={{
+        flex: 1,
         padding: '16px 8px',
         overflowY: 'auto'
       }}>
-        {/* 语音频道分类 */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 8px',
-          marginBottom: 8
-        }}>
-          <Text style={{ 
-            color: '#8e9297', 
-            fontSize: 12, 
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.02em'
+        {!selectedServer ? (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            textAlign: 'center'
           }}>
-            语音频道
-          </Text>
-          <Button
-            type="text"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={() => setIsModalVisible(true)}
-            style={{
-              color: '#8e9297',
-              padding: 0,
-              width: 18,
-              height: 18,
-              minWidth: 18,
+            <DiscordText variant="muted">
+              请从左侧选择一个服务器
+            </DiscordText>
+          </div>
+        ) : (
+          <>
+            {/* 语音频道分类 */}
+            <div style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'space-between',
+              padding: '0 8px',
+              marginBottom: 8
+            }}>
+              <DiscordText
+                variant="muted"
+                size="sm"
+                weight="semibold"
+                style={{
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.02em'
+                }}
+              >
+                语音频道
+              </DiscordText>
+              <Button
+                type="text"
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={() => setIsModalVisible(true)}
+                style={{
+                  color: '#8e9297',
+                  padding: 0,
+                  width: 18,
+                  height: 18,
+                  minWidth: 18,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
             }}
           />
         </div>
@@ -298,15 +353,17 @@ const ChannelList: React.FC<ChannelListProps> = ({
           );
         })}
 
-        {channels.length === 0 && (
-          <div style={{
-            padding: '16px 8px',
-            textAlign: 'center',
-            color: '#72767d',
-            fontSize: 14
-          }}>
-            暂无频道
-          </div>
+            {channels.length === 0 && (
+              <div style={{
+                padding: '16px 8px',
+                textAlign: 'center',
+                color: '#72767d',
+                fontSize: 14
+              }}>
+                暂无频道
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -546,121 +603,56 @@ const ChannelList: React.FC<ChannelListProps> = ({
       )}
 
       {/* Discord风格的创建频道模态框 */}
-      <Modal
-        title={null}
-        open={isModalVisible}
+      <DiscordModal
+        visible={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
           form.resetFields();
         }}
-        footer={null}
+        title="创建语音频道"
+        subtitle="语音频道是大家聚在一起闲聊的地方。这些频道只能通过邀请才能访问，而且是私人对话。"
         width={440}
-        styles={{
-          content: {
-            backgroundColor: '#36393f',
-            borderRadius: 8,
-            padding: 0
-          }
-        }}
+        footer={
+          <>
+            <DiscordButton
+              variant="secondary"
+              onClick={() => {
+                setIsModalVisible(false);
+                form.resetFields();
+              }}
+            >
+              取消
+            </DiscordButton>
+            <DiscordButton
+              variant="primary"
+              onClick={() => form.submit()}
+              loading={loading}
+            >
+              创建频道
+            </DiscordButton>
+          </>
+        }
       >
-        <div style={{ padding: 24 }}>
-          <Title level={4} style={{ 
-            color: '#ffffff', 
-            marginBottom: 8,
-            fontSize: 20,
-            fontWeight: 600
-          }}>
-            创建语音频道
-          </Title>
-          <Text style={{ 
-            color: '#b9bbbe', 
-            fontSize: 14,
-            display: 'block',
-            marginBottom: 20
-          }}>
-            语音频道是大家聚在一起闲聊的地方。这些频道只能通过邀请才能访问，而且是私人对话。
-          </Text>
-
-          <Form form={form} layout="vertical" onFinish={handleCreateChannel}>
-            <Form.Item
-              name="name"
-              label={<Text style={{ color: '#b9bbbe', fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>频道名称</Text>}
-              rules={[{ required: true, message: '请输入频道名称!' }]}
-            >
-              <Input 
-                placeholder="新频道"
-                style={{
-                  backgroundColor: '#202225',
-                  border: 'none',
-                  borderRadius: 3,
-                  color: '#ffffff',
-                  fontSize: 16,
-                  padding: '10px 12px'
-                }}
-              />
-            </Form.Item>
-            <Form.Item 
-              name="description" 
-              label={<Text style={{ color: '#b9bbbe', fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>频道描述（可选）</Text>}
-            >
-              <Input.TextArea 
-                placeholder="描述这个频道的用途"
-                rows={3}
-                style={{
-                  backgroundColor: '#202225',
-                  border: 'none',
-                  borderRadius: 3,
-                  color: '#ffffff',
-                  fontSize: 16,
-                  padding: '10px 12px'
-                }}
-              />
-            </Form.Item>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'flex-end', 
-              gap: 12,
-              marginTop: 24,
-              paddingTop: 16,
-              borderTop: '1px solid #3f4147'
-            }}>
-              <Button
-                onClick={() => {
-                  setIsModalVisible(false);
-                  form.resetFields();
-                }}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  color: '#ffffff',
-                  fontSize: 14,
-                  fontWeight: 500,
-                  padding: '8px 16px',
-                  height: 'auto'
-                }}
-              >
-                取消
-              </Button>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
-                loading={loading}
-                style={{
-                  backgroundColor: '#5865f2',
-                  borderColor: '#5865f2',
-                  fontSize: 14,
-                  fontWeight: 500,
-                  padding: '8px 16px',
-                  height: 'auto',
-                  borderRadius: 3
-                }}
-              >
-                创建频道
-              </Button>
-            </div>
-          </Form>
-        </div>
-      </Modal>
+        <Form form={form} layout="vertical" onFinish={handleCreateChannel}>
+          <Form.Item
+            name="name"
+            rules={[{ required: true, message: '请输入频道名称!' }]}
+          >
+            <DiscordInput
+              label="频道名称"
+              placeholder="新频道"
+              required
+            />
+          </Form.Item>
+          <Form.Item name="description">
+            <DiscordTextArea
+              label="频道描述（可选）"
+              placeholder="描述这个频道的用途"
+              rows={3}
+            />
+          </Form.Item>
+        </Form>
+      </DiscordModal>
 
       {/* 个人资料模态框 */}
       {user && (
