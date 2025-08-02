@@ -16,6 +16,13 @@ interface MainAppProps {
 
 const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  const [connectedUsers, setConnectedUsers] = useState<Array<{
+    id: string;
+    userId: number;
+    username: string;
+    channelId: number;
+  }>>([]);
+  const [autoJoinVoice, setAutoJoinVoice] = useState<number | null>(null);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -27,6 +34,33 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
   const handleChannelSelect = (channel: Channel) => {
     if (selectedChannel?.id !== channel.id) {
       setSelectedChannel(channel);
+    }
+  };
+
+  const handleJoinVoice = async (channelId: number) => {
+    try {
+      console.log(`加入语音频道: ${channelId}`);
+      
+      // 将当前用户添加到连接列表中
+      const currentUserConnection = {
+        id: `current-user-${user.id}`,
+        userId: user.id,
+        username: user.username,
+        channelId: channelId
+      };
+      
+      setConnectedUsers(prev => {
+        // 先移除用户在其他频道的连接
+        const filteredUsers = prev.filter(u => u.userId !== user.id);
+        // 添加到新频道
+        return [...filteredUsers, currentUserConnection];
+      });
+      
+      // 触发ChatArea中的语音连接
+      setAutoJoinVoice(channelId);
+      
+    } catch (error) {
+      console.error('加入语音频道失败:', error);
     }
   };
 
@@ -49,6 +83,41 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
 
   useEffect(() => {
     socketService.connect(user);
+    
+    // 监听用户连接事件
+    const handleUserConnected = (data: { id: string; userId: number; username: string; channelId: number }) => {
+      setConnectedUsers(prev => {
+        const exists = prev.find(u => u.id === data.id);
+        if (!exists) {
+          return [...prev, data];
+        }
+        return prev;
+      });
+    };
+
+    // 监听用户断开连接事件
+    const handleUserDisconnected = (data: { id: string }) => {
+      setConnectedUsers(prev => prev.filter(u => u.id !== data.id));
+    };
+
+    // 监听频道用户列表更新
+    const handleChannelUsersUpdate = (data: { channelId: number; users: Array<{ id: string; userId: number; username: string }> }) => {
+      setConnectedUsers(prev => {
+        // 移除该频道的旧用户
+        const filteredUsers = prev.filter(u => u.channelId !== data.channelId);
+        // 添加新的用户列表
+        const newUsers = data.users.map(user => ({
+          ...user,
+          channelId: data.channelId
+        }));
+        return [...filteredUsers, ...newUsers];
+      });
+    };
+
+    // 注册事件监听器（这些事件需要在后端实现）
+    // socketService.on('userConnected', handleUserConnected);
+    // socketService.on('userDisconnected', handleUserDisconnected);
+    // socketService.on('channelUsersUpdate', handleChannelUsersUpdate);
     
     return () => {
       socketService.disconnect();
@@ -115,6 +184,8 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
         selectedChannelId={selectedChannel?.id || null}
         user={user}
         onLogout={handleLogout}
+        onJoinVoice={handleJoinVoice}
+        connectedUsers={connectedUsers}
       />
 
       {/* 主内容区域 */}
@@ -126,6 +197,8 @@ const MainApp: React.FC<MainAppProps> = ({ user, onLogout }) => {
         <ChatArea 
           channel={selectedChannel}
           user={user}
+          autoJoinVoice={autoJoinVoice}
+          onVoiceJoined={() => setAutoJoinVoice(null)}
         />
       </div>
     </div>

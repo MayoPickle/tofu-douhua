@@ -11,9 +11,11 @@ const { Title, Text } = Typography;
 interface ChatAreaProps {
   channel: Channel | null;
   user: User;
+  autoJoinVoice?: number | null;
+  onVoiceJoined?: () => void;
 }
 
-const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
+const ChatArea: React.FC<ChatAreaProps> = ({ channel, user, autoJoinVoice, onVoiceJoined }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
@@ -84,6 +86,15 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // 处理自动加入语音
+  useEffect(() => {
+    if (autoJoinVoice && channel && autoJoinVoice === channel.id && !isAudioEnabled) {
+      handleToggleAudio().then(() => {
+        onVoiceJoined?.();
+      }).catch(console.error);
+    }
+  }, [autoJoinVoice, channel, isAudioEnabled]);
 
   if (!channel) {
     return (
@@ -157,39 +168,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
         </Space>
       </div>
 
-      {/* 语音用户列表 */}
-      {connectedUsers.length > 0 && (
-        <div style={{ 
-          padding: '8px 16px', 
-          backgroundColor: '#2f3136', 
-          borderBottom: '1px solid #202225' 
-        }}>
-          <Text style={{ fontSize: 12, color: '#8e9297', fontWeight: 600 }}>
-            语音频道中的用户 ({connectedUsers.length})
-          </Text>
-          <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {connectedUsers.map(connectedUser => (
-              <div key={connectedUser.id} style={{
-                display: 'flex',
-                alignItems: 'center',
-                backgroundColor: '#40444b',
-                padding: '4px 8px',
-                borderRadius: 12,
-                fontSize: 12
-              }}>
-                <div style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: '#3ba55d',
-                  marginRight: 6
-                }} />
-                <Text style={{ color: '#dcddde', fontSize: 12 }}>用户 {connectedUser.userId}</Text>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* 消息列表 */}
       <div style={{ 

@@ -15,9 +15,16 @@ interface ChannelListProps {
     email: string;
   };
   onLogout?: () => void;
+  onJoinVoice?: (channelId: number) => void;
+  connectedUsers?: Array<{
+    id: string;
+    userId: number;
+    username: string;
+    channelId: number;
+  }>;
 }
 
-const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChannelId, user, onLogout }) => {
+const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChannelId, user, onLogout, onJoinVoice, connectedUsers }) => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,9 +58,17 @@ const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChan
     try {
       await channelAPI.joinChannel(channel.id);
       onChannelSelect(channel);
+      // 自动加入语音频道
+      if (onJoinVoice) {
+        onJoinVoice(channel.id);
+      }
     } catch (error: any) {
       if (error.response?.status === 400) {
         onChannelSelect(channel);
+        // 即使已经在频道中，也尝试加入语音
+        if (onJoinVoice) {
+          onJoinVoice(channel.id);
+        }
       } else {
         message.error('加入频道失败');
       }
@@ -130,65 +145,132 @@ const ChannelList: React.FC<ChannelListProps> = ({ onChannelSelect, selectedChan
         </div>
 
         {/* 频道项目 */}
-        {channels.map((channel) => (
-          <div
-            key={channel.id}
-            style={{
-              padding: '6px 8px',
-              margin: '1px 0',
-              borderRadius: 4,
-              cursor: 'pointer',
-              backgroundColor: selectedChannelId === channel.id ? '#5865f2' : 'transparent',
-              color: selectedChannelId === channel.id ? '#ffffff' : '#96989d',
-              transition: 'all 0.15s ease',
-              display: 'flex',
-              alignItems: 'center',
-              position: 'relative'
-            }}
-            onClick={() => handleJoinChannel(channel)}
-            onMouseEnter={(e) => {
-              if (selectedChannelId !== channel.id) {
-                e.currentTarget.style.backgroundColor = '#35393f';
-                e.currentTarget.style.color = '#dcddde';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedChannelId !== channel.id) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#96989d';
-              }
-            }}
-          >
-            <SoundOutlined style={{ 
-              marginRight: 6, 
-              fontSize: 20,
-              color: selectedChannelId === channel.id ? '#ffffff' : '#8e9297'
-            }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ 
-                fontSize: 16, 
-                fontWeight: 500,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}>
-                {channel.name}
+        {channels.map((channel) => {
+          const channelUsers = connectedUsers?.filter(user => user.channelId === channel.id) || [];
+          const isActive = selectedChannelId === channel.id;
+          
+          return (
+            <div key={channel.id}>
+              <div
+                style={{
+                  padding: '6px 8px',
+                  margin: '1px 0',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  backgroundColor: isActive ? '#5865f2' : 'transparent',
+                  color: isActive ? '#ffffff' : '#96989d',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  position: 'relative'
+                }}
+                onClick={() => handleJoinChannel(channel)}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = '#35393f';
+                    e.currentTarget.style.color = '#dcddde';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#96989d';
+                  }
+                }}
+              >
+                <SoundOutlined style={{ 
+                  marginRight: 6, 
+                  fontSize: 20,
+                  color: isActive ? '#ffffff' : '#8e9297'
+                }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ 
+                    fontSize: 16, 
+                    fontWeight: 500,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {channel.name}
+                  </div>
+                  {channel.description && (
+                    <div style={{ 
+                      fontSize: 12, 
+                      opacity: 0.8,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      marginTop: 2
+                    }}>
+                      {channel.description}
+                    </div>
+                  )}
+                </div>
+                
+                {/* 在线用户数量指示器 */}
+                {channelUsers.length > 0 && (
+                  <div style={{
+                    color: isActive ? '#ffffff' : '#8e9297',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    marginLeft: 4
+                  }}>
+                    {channelUsers.length}
+                  </div>
+                )}
               </div>
-              {channel.description && (
-                <div style={{ 
-                  fontSize: 12, 
-                  opacity: 0.8,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  marginTop: 2
+              
+              {/* 频道内的在线用户列表 */}
+              {channelUsers.length > 0 && (
+                <div style={{
+                  paddingLeft: 32,
+                  marginBottom: 4
                 }}>
-                  {channel.description}
+                  {channelUsers.map((connectedUser) => (
+                    <div
+                      key={connectedUser.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        color: '#b9bbbe',
+                        fontSize: 14,
+                        lineHeight: 1.2,
+                        transition: 'background-color 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#35393f';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <Avatar 
+                        size={20} 
+                        style={{ 
+                          backgroundColor: '#5865f2',
+                          marginRight: 8,
+                          fontSize: 10
+                        }}
+                      >
+                        {connectedUser.username.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <span>{connectedUser.username}</span>
+                      <div style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: '#3ba55d',
+                        marginLeft: 'auto'
+                      }} />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {channels.length === 0 && (
           <div style={{
