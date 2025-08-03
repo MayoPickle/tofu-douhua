@@ -6,12 +6,14 @@ import DiscordButton from './DiscordButton';
 interface DiscordModalProps {
   visible: boolean;
   onCancel: () => void;
-  title: string;
+  title: string | React.ReactNode;
   subtitle?: string;
   width?: number;
   children: React.ReactNode;
   footer?: React.ReactNode;
   showCloseButton?: boolean;
+  variant?: 'default' | 'success' | 'warning' | 'danger';
+  icon?: React.ReactNode;
 }
 
 const DiscordModal: React.FC<DiscordModalProps> = ({
@@ -23,6 +25,8 @@ const DiscordModal: React.FC<DiscordModalProps> = ({
   children,
   footer,
   showCloseButton = true,
+  variant = 'default',
+  icon,
 }) => {
   // 键盘快捷键支持
   useEffect(() => {
@@ -40,6 +44,34 @@ const DiscordModal: React.FC<DiscordModalProps> = ({
     }
   }, [visible, onCancel]);
 
+  // 获取变体样式
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'success':
+        return {
+          headerGradient: 'linear-gradient(135deg, #3ba55c 0%, #2d7d32 100%)',
+          accentColor: '#3ba55c',
+        };
+      case 'warning':
+        return {
+          headerGradient: 'linear-gradient(135deg, #faa61a 0%, #f57c00 100%)',
+          accentColor: '#faa61a',
+        };
+      case 'danger':
+        return {
+          headerGradient: 'linear-gradient(135deg, #ed4245 0%, #c62828 100%)',
+          accentColor: '#ed4245',
+        };
+      default:
+        return {
+          headerGradient: 'linear-gradient(135deg, #5865f2 0%, #4752c4 100%)',
+          accentColor: '#5865f2',
+        };
+    }
+  };
+
+  const variantStyles = getVariantStyles();
+
   return (
     <Modal
       open={visible}
@@ -50,12 +82,20 @@ const DiscordModal: React.FC<DiscordModalProps> = ({
       closable={false}
       styles={{
         body: { padding: 0 },
-        content: { 
+        content: {
           backgroundColor: '#36393f',
-          borderRadius: 8,
-          overflow: 'hidden'
+          borderRadius: 16,
+          overflow: 'hidden',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 32px rgba(0, 0, 0, 0.3)',
+          border: '1px solid #40444b',
+        },
+        mask: {
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(8px)',
         }
       }}
+      transitionName=""
+      maskTransitionName=""
     >
       {/* Header */}
       <div style={{
